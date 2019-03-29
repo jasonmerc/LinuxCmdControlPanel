@@ -12,7 +12,6 @@ import java.util.ArrayList;
 
 class PanelModel {
 
-    //string for storing the operating system type, will be used when running commands
     //string array for selection of commands to choose from
     private final String[] commandsToPickFrom = {"date", "ls", "pwd", "whoami"};
     private final ProcessBuilder process;
