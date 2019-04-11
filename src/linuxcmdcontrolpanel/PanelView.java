@@ -53,7 +53,7 @@ class PanelView extends JFrame {
         scrollPane.setSize(200, 200);
 
         runButton.setText("RUN");
-        histButton.setText("HISTORY");
+        histButton.setText("SHOW HISTORY");
         exportButton.setText("EXPORT HISTORY");
         helpButton.setText("HELP");
         outputAreaLabel.setText("OUTPUT:");
@@ -99,18 +99,25 @@ class PanelView extends JFrame {
     }
 
     //separate method to run the command selected
+    //this "bit of logic" needs to be in the viewer to properly transfer the additional parameter for "cd"
     public void runCommandButtonPressed() {
         try {
+            //if the command is the "cd" command specifically which needs additional input...
             if (listOfCommands.getSelectedItem().toString().equals("cd")) {
+                //ask user to input a folder (relative path) in working directory
                 String newDirectory = JOptionPane.showInputDialog(this, "Please input the folder in the current working directory to move to");
+                //if the input isn't empty or cancel button not pressed, try to go into that directory
                 if (!(newDirectory == null || newDirectory.isEmpty())) {
                     cntl.runCommand(listOfCommands.getSelectedItem().toString(), newDirectory);
+                    //else just abort the operation and do nothing
                 } else {
                     showMessageDialog("Operation aborted");
                 }
+                //if the command isn't "cd" that needs input, just run the command
             } else {
                 cntl.runCommand(listOfCommands.getSelectedItem().toString(), null);
             }
+            //if something goes wrong, show a message that it's broken
         } catch (IOException ex) {
             showMessageDialog("IO Exception From Viewer While Running Command");
         }
