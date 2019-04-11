@@ -9,17 +9,23 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 class PanelModel {
 
     //string array for selection of commands to choose from
-    private final String[] commandsToPickFrom = {"date", "ls", "pwd", "whoami"};
+    private final String[] commandsToPickFrom = {"cd", "cd ..", "date", "ls", "lscpu", "ps", "pwd", "whoami"};
     private final ProcessBuilder process;
+    //string to store current working directory, not final because it can change
+    private String directory;
     PanelModelData history;
 
     public PanelModel() {
         history = new PanelModelData();
         process = new ProcessBuilder();
+        directory = System.getProperty("user.home");
     }
 
     //returns string array of commands that appear for the user to pick from
@@ -27,20 +33,128 @@ class PanelModel {
         return this.commandsToPickFrom;
     }
 
+    //method to return a string describing what selected command in viewer does
+    public String getHelp(String cmd) {
+        switch (cmd) {
+            case "cd":
+                return cmd + ": Changes directory to specified directory";
+            case "cd ..":
+                return cmd + ": Goes up a directory";
+            case "date":
+                return cmd + ": Shows the date and time on the machine";
+            case "ls":
+                return cmd + ": Lists contents of current directory";
+            case "lscpu":
+                return cmd + ": Displays CPU information of the machine";
+            case "ps":
+                return cmd + ": Lists running processes on the machine";
+            case "pwd":
+                return cmd + ": Prints the current working directory";
+            case "whoami":
+                return cmd + ": Prints user currently logged on";
+            default:
+                return "Error, command " + cmd + " not found in help database!";
+        }
+    }
+
     //method that gets output from command and returns it as arraylist of strings
     //currently defaults to user's home directory, may add functionality to change this later
-    public ArrayList<String> runProcess(String cmd) throws IOException {
+    public ArrayList<String> runProcess(String cmd, String parameter) throws IOException {
         ArrayList<String> finalOut = new ArrayList<>();
         //add command to history of commands run
         history.addCommand(cmd);
+        //switch statement to try and return output in "simple" manner
         try {
             switch (cmd) {
                 case "whoami":
                     finalOut.add(System.getProperty("user.name"));
                     break;
                 case "pwd":
-                    finalOut.add(System.getProperty("user.home"));
+                    finalOut.add(directory);
                     break;
+                /*
+                okay get ready, this is a long section here
+                this changes the directory in both windows and non-windows systems
+                if the directory does not exist, it refuses to do so
+                 */
+                case "cd":
+                    if (System.getProperty("os.name").contains("Windows")) {
+                        String oldDirectory = directory;
+                        directory = directory + "\\" + parameter + "\\";
+                        String slashRemoval = directory.replace("\\\\", "\\");
+                        directory = slashRemoval;
+                        Path path = Paths.get(directory);
+                        if (Files.exists(path)) {
+                            finalOut.add("**Directory changed to " + directory + "**");
+                            break;
+                        } else {
+                            finalOut.add("**Error changing directory to " + directory + "**");
+                            directory = oldDirectory;
+                            break;
+                        }
+                    } else {
+                        String oldDirectory = directory;
+                        directory = directory + "/" + parameter + "/";
+                        String slashRemoval = directory.replace("//", "/");
+                        directory = slashRemoval;
+                        Path path = Paths.get(directory);
+                        if (Files.exists(path)) {
+                            finalOut.add("**Directory changed to " + directory + "**");
+                            break;
+                        } else {
+                            finalOut.add("**Error changing directory to " + directory + "**");
+                            directory = oldDirectory;
+                            break;
+                        }
+                    }
+                /*
+                okay get ready, this is a long section here as well
+                this changes the directory up in both windows and non-windows systems
+                if you're at the root it will refuse to go up further
+                 */
+                case "cd ..":
+                    if (System.getProperty("os.name").contains("Windows")) {
+                        if (!(directory.equals("C:\\"))) {
+                            ArrayList<String> directoryTemp = new ArrayList<>();
+                            directory = directory.replace("\\", "/");
+                            String[] split = directory.split("/");
+                            directory = "";
+                            for (int i = 0; i < split.length - 1; i++) {
+                                directoryTemp.add(split[i] + "/");
+                            }
+                            for (int i = 0; i < directoryTemp.size(); i++) {
+                                directory = directory + directoryTemp.get(i);
+                            }
+                            String slashRemoval = directory.replace("//", "/");
+                            directory = slashRemoval;
+                            directory = directory.replace("/", "\\");
+                            finalOut.add("**Directory changed to " + directory + "**");
+                            break;
+                        } else {
+                            finalOut.add("**Can't change directory, already at root**");
+                            break;
+                        }
+                    } else {
+                        if (!(directory.equals("/"))) {
+                            ArrayList<String> directoryTemp = new ArrayList<>();
+                            String[] split = directory.split("/");
+                            directory = "";
+                            for (int i = 0; i < split.length - 1; i++) {
+                                directoryTemp.add(split[i] + "/");
+                            }
+                            for (int i = 0; i < directoryTemp.size(); i++) {
+                                directory = directory + directoryTemp.get(i);
+                            }
+                            String slashRemoval = directory.replace("//", "/");
+                            directory = slashRemoval;
+                            finalOut.add("**Directory changed to " + directory + "**");
+                            break;
+                        } else {
+                            finalOut.add("**Can't change directory, already at root**");
+                            break;
+                        }
+                    }
+                //default case for running any other process not specified
                 default:
                     //makes new ProcessBuilder object to prepare for process running
                     //converts 'ls' to 'dir' if user is running Windows
@@ -51,11 +165,25 @@ class PanelModel {
                         } else if (cmd.equals("date")) {
                             cmd = "echo %date%";
                             process.command("CMD", "/C", cmd);
+                        } else if (cmd.equals("lscpu")) {
+                            cmd = "wmic cpu list brief";
+                            process.command("CMD", "/C", cmd);
+                        } else if (System.getProperty("os.name").contains("Mac")) {
+                            if (cmd.equals("lscpu")) {
+                                process.command("sysctl", "-n", "machdep.cpu.brand_string");
+                            } else if (cmd.equals("ps")) {
+                                process.command("ps", "-e");
+                            }
                         }
+                        //"default" case for if you use linux
                     } else {
-                        process.command(cmd);
+                        if (cmd.equals("ps")) {
+                            process.command("ps", "-e");
+                        } else {
+                            process.command(cmd);
+                        }
                     }
-                    process.directory(new File(System.getProperty("user.home")));
+                    process.directory(new File(directory));
                     //runs command, gets output with bufferedreader and inputstreamreader
                     Process p2 = process.start();
                     BufferedReader reader = new BufferedReader(new InputStreamReader(p2.getInputStream()));
@@ -68,7 +196,6 @@ class PanelModel {
             }
         } catch (IOException ioexec) {
             finalOut.add("IO Exception While Running Command");
-            System.err.println("IO Exception While Running Command");
         } finally {
             //finally at the end it returns the output
             return finalOut;

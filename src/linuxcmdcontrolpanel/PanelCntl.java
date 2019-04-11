@@ -23,9 +23,9 @@ class PanelCntl {
     }
 
     //runs the command specified in the view AND pipes output back to the view
-    public void runCommand(String cmd) throws IOException {
+    public void runCommand(String cmd, String parameter) throws IOException {
         view.clearOutputField();
-        ArrayList<String> outputToPrint = model.runProcess(cmd);
+        ArrayList<String> outputToPrint = model.runProcess(cmd, parameter);
         for (int i = 0; i < outputToPrint.size(); i++) {
             view.appendToOutputField(outputToPrint.get(i));
         }
@@ -38,5 +38,20 @@ class PanelCntl {
         } else {
             return "No history to show yet!";
         }
+    }
+
+    //calls model to export history to text file
+    public void exportHistory() {
+        makeViewerShowMessage(this.model.history.exportHistory());
+    }
+
+    //method to tell viewer to display calculated help message for the selected command
+    public void getHelp(String cmd) {
+        makeViewerShowMessage(this.model.getHelp(cmd));
+    }
+
+    //method to make the viewer display some sort of message as a dialog
+    public void makeViewerShowMessage(String message) {
+        this.view.showMessageDialog(message);
     }
 }
