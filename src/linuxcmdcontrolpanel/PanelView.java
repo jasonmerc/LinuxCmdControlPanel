@@ -101,7 +101,16 @@ class PanelView extends JFrame {
     //separate method to run the command selected
     public void runCommandButtonPressed() {
         try {
-            cntl.runCommand(listOfCommands.getSelectedItem().toString(), null);
+            if (listOfCommands.getSelectedItem().toString().equals("cd")) {
+                String newDirectory = JOptionPane.showInputDialog(this, "Please input the folder in the current working directory to move to");
+                if (!(newDirectory == null || newDirectory.isEmpty())) {
+                    cntl.runCommand(listOfCommands.getSelectedItem().toString(), newDirectory);
+                } else {
+                    showMessageDialog("Operation aborted");
+                }
+            } else {
+                cntl.runCommand(listOfCommands.getSelectedItem().toString(), null);
+            }
         } catch (IOException ex) {
             showMessageDialog("IO Exception From Viewer While Running Command");
         }
