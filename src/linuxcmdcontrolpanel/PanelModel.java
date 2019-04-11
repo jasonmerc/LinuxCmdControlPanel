@@ -157,7 +157,7 @@ class PanelModel {
                 //default case for running any other process not specified
                 default:
                     //makes new ProcessBuilder object to prepare for process running
-                    //converts 'ls' to 'dir' if user is running Windows
+                    //this first case here is for if you use windows
                     if (System.getProperty("os.name").contains("Windows")) {
                         if (cmd.equals("ls")) {
                             cmd = "dir";
@@ -168,14 +168,18 @@ class PanelModel {
                         } else if (cmd.equals("lscpu")) {
                             cmd = "wmic cpu list brief";
                             process.command("CMD", "/C", cmd);
-                        } else if (System.getProperty("os.name").contains("Mac")) {
-                            if (cmd.equals("lscpu")) {
-                                process.command("sysctl", "-n", "machdep.cpu.brand_string");
-                            } else if (cmd.equals("ps")) {
-                                process.command("ps", "-e");
-                            }
+                        } else if (cmd.equals("ps")) {
+                            cmd = "tasklist";
+                            process.command("CMD", "/C", cmd);
                         }
-                        //"default" case for if you use linux
+                        //case for if you use mac
+                    } else if (System.getProperty("os.name").contains("Mac")) {
+                        if (cmd.equals("lscpu")) {
+                            process.command("sysctl", "-n", "machdep.cpu.brand_string");
+                        } else if (cmd.equals("ps")) {
+                            process.command("ps", "-e");
+                        }
+                        //case for if you use linux
                     } else {
                         if (cmd.equals("ps")) {
                             process.command("ps", "-e");
