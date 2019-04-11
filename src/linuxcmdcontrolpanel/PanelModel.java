@@ -81,12 +81,15 @@ class PanelModel {
                     if (System.getProperty("os.name").contains("Windows")) {
                         String oldDirectory = directory;
                         directory = directory + "\\" + parameter + "\\";
-                        String slashRemoval = directory.replace("\\\\", "\\");
-                        directory = slashRemoval;
+                        //replace any of the double slashes that sometimes pop up
+                        directory = directory.replace("\\\\", "\\");
+                        //Path object parses the literal path from the directory string
                         Path path = Paths.get(directory);
+                        //if the new directory the user wants to cd into exists, do it
                         if (Files.exists(path)) {
                             finalOut.add("**Directory changed to " + directory + "**");
                             break;
+                            //if the new directory doesnt exist, set it to the old directory and give an error
                         } else {
                             finalOut.add("**Error changing directory to " + directory + "**");
                             directory = oldDirectory;
@@ -95,12 +98,14 @@ class PanelModel {
                     } else {
                         String oldDirectory = directory;
                         directory = directory + "/" + parameter + "/";
-                        String slashRemoval = directory.replace("//", "/");
-                        directory = slashRemoval;
+                        directory = directory.replace("//", "/");
+                        //try to get literal path with Path object from directory string
                         Path path = Paths.get(directory);
+                        //if the directory actually exists, go into it
                         if (Files.exists(path)) {
                             finalOut.add("**Directory changed to " + directory + "**");
                             break;
+                            //if it doesnt exist, go back to the old directory and give an error
                         } else {
                             finalOut.add("**Error changing directory to " + directory + "**");
                             directory = oldDirectory;
@@ -114,41 +119,56 @@ class PanelModel {
                  */
                 case "cd ..":
                     if (System.getProperty("os.name").contains("Windows")) {
+                        //if the current directory isn't the root directory, try to cd up
                         if (!(directory.equals("C:\\"))) {
+                            //arraylist to store each bit of the path, separated by slashes
                             ArrayList<String> directoryTemp = new ArrayList<>();
+                            //windows uses the backslash, but temporarily change these to the other slash so we can manipualte it easier
                             directory = directory.replace("\\", "/");
+                            //split directory based on the slashes
                             String[] split = directory.split("/");
+                            //start with a blank slate for directory variable
                             directory = "";
+                            //for each item in the array minus last one, add it to the arraylist with a slash
                             for (int i = 0; i < split.length - 1; i++) {
                                 directoryTemp.add(split[i] + "/");
                             }
+                            //now for each item in the arraylist, append it to the real sdirectory string
                             for (int i = 0; i < directoryTemp.size(); i++) {
                                 directory = directory + directoryTemp.get(i);
                             }
-                            String slashRemoval = directory.replace("//", "/");
-                            directory = slashRemoval;
+                            //remove duplicate slashes
+                            directory = directory.replace("//", "/");
+                            //return the forward slashes to normal backslashes for windows
                             directory = directory.replace("/", "\\");
                             finalOut.add("**Directory changed to " + directory + "**");
                             break;
+                            //if you're already at the root, dont cd up because nothing else exists
                         } else {
                             finalOut.add("**Can't change directory, already at root**");
                             break;
                         }
                     } else {
                         if (!(directory.equals("/"))) {
+                            //make arraylist for directory modification
                             ArrayList<String> directoryTemp = new ArrayList<>();
+                            //make absic array that splits directory based on "/" delimiter
                             String[] split = directory.split("/");
+                            //reset directory to blank
                             directory = "";
+                            //for each item in the array minus the last, add to arraylist with a slash
                             for (int i = 0; i < split.length - 1; i++) {
                                 directoryTemp.add(split[i] + "/");
                             }
+                            //for each item in the arraylist now, append back to the original directory string
                             for (int i = 0; i < directoryTemp.size(); i++) {
                                 directory = directory + directoryTemp.get(i);
                             }
-                            String slashRemoval = directory.replace("//", "/");
-                            directory = slashRemoval;
+                            //remove any duplicate slashes there may be
+                            directory = directory.replace("//", "/");
                             finalOut.add("**Directory changed to " + directory + "**");
                             break;
+                            //if you're already at the root, then don't do anything because you're already at the top
                         } else {
                             finalOut.add("**Can't change directory, already at root**");
                             break;
@@ -157,7 +177,7 @@ class PanelModel {
                 //default case for running any other process not specified
                 default:
                     //makes new ProcessBuilder object to prepare for process running
-                    //this first case here is for if you use windows
+                    //this first case here is for translation if you use windows
                     if (System.getProperty("os.name").contains("Windows")) {
                         if (cmd.equals("ls")) {
                             cmd = "dir";
@@ -172,14 +192,14 @@ class PanelModel {
                             cmd = "tasklist";
                             process.command("CMD", "/C", cmd);
                         }
-                        //case for if you use mac
+                        //case for translation if you use mac
                     } else if (System.getProperty("os.name").contains("Mac")) {
                         if (cmd.equals("lscpu")) {
                             process.command("sysctl", "-n", "machdep.cpu.brand_string");
                         } else if (cmd.equals("ps")) {
                             process.command("ps", "-e");
                         }
-                        //case for if you use linux
+                        //case for translation if you use linux
                     } else {
                         if (cmd.equals("ps")) {
                             process.command("ps", "-e");
@@ -201,7 +221,7 @@ class PanelModel {
         } catch (IOException ioexec) {
             finalOut.add("IO Exception While Running Command");
         } finally {
-            //finally at the end it returns the output
+            //finally at the end it returns the output arraylist
             return finalOut;
         }
     }

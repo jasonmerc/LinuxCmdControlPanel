@@ -20,7 +20,7 @@ HOW TO TEST:
 -Export the command history to a text file, then check your home directory to make sure it exported properly (for Windows this is C:\Users\[YOU\)
 
 BUGS:
-
+-XLint gives an error when compiling (unsafe practices) but I am not able to determine what it leads to.  Otherwise it doesn't affect the program in any way
  */
 package linuxcmdcontrolpanel;
 
