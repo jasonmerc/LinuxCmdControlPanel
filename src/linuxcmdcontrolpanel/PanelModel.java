@@ -198,6 +198,11 @@ class PanelModel {
                             process.command("sysctl", "-n", "machdep.cpu.brand_string");
                         } else if (cmd.equals("ps")) {
                             process.command("ps", "-e");
+                            //for some reason Mac doesn't like ls and date, I need to manually specify them here
+                        } else if (cmd.equals("ls")) {
+                            process.command("ls");
+                        } else if (cmd.equals("date")) {
+                            process.command("date");
                         }
                         //case for translation if you use linux
                     } else {
