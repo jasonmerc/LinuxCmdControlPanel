@@ -10,6 +10,7 @@ CHANGES:
 -Added HELP button that describes what the selected command does
 -Added EXPORT button that exports the command history to a text file in the user's home directory
 -Added "cd" and "cd .." commands to navigate directories in the system, actually changes the working directory too!
+-Imported Files & Paths classes to the PanelModel class, this has to do with exception handling when trying to cd to a directory that doesn't exist
 
 HOW TO TEST:
 
